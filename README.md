@@ -1,9 +1,13 @@
 # <a href='https://habr.com/ru/post/596411/'>SpoofingTlsFingerprint</a>
 Прокси сервер для обхода TLS Fingerprint
 
+Взят проект https://github.com/Skyuzii/SpoofingTlsFingerprint , и заменено
+использование уже устаревшей https://pkg.go.dev/github.com/Skyuzii/CycleTLS/cycletls
+на оригинальную https://pkg.go.dev/github.com/Danny-Dasilva/CycleTLS/cycletls
+
 ## Зависимости
 ```
-golang ^v1.17
+golang v1.20
 ```
 
 ## Запуск

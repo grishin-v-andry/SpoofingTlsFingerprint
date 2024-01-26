@@ -3,18 +3,13 @@ package main
 import (
 	"Golang/Request"
 	"Golang/Response"
-	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/Skyuzii/CycleTLS/cycletls"
+	"github.com/Danny-Dasilva/CycleTLS/cycletls"
 	"github.com/gorilla/mux"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/cookiejar"
-	url2 "net/url"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -47,9 +42,9 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 	json.NewDecoder(request.Body).Decode(&handleRequest)
 	client := cycletls.Init()
 
-	var cookies []*http.Cookie
+	var cookies []cycletls.Cookie
 	for _, cookie := range handleRequest.Cookies {
-		cookies = append(cookies, &http.Cookie{
+		cookies = append(cookies, cycletls.Cookie{
 			Name:     cookie.Name,
 			Value:    cookie.Value,
 			Path:     cookie.Path,
@@ -57,16 +52,12 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 			Expires:  cookie.Expires,
 			MaxAge:   cookie.MaxAge,
 			Secure:   cookie.Secure,
-			HttpOnly: cookie.HTTPOnly,
+			HTTPOnly: cookie.HTTPOnly,
 		})
 	}
 
-	cookiesJar, _ := cookiejar.New(nil)
-	requestUrl, _ := url2.Parse(handleRequest.Url)
-	cookiesJar.SetCookies(requestUrl, cookies)
-
 	resp, err := client.Do(handleRequest.Url, cycletls.Options{
-		CookiesJar:         cookiesJar,
+		Cookies:            cookies,
 		InsecureSkipVerify: handleRequest.InsecureSkipVerify,
 		Body:               handleRequest.Body,
 		Proxy:              handleRequest.Proxy,
@@ -90,12 +81,12 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 	handleResponse.Success = true
 	handleResponse.Payload = &Response.HandleResponsePayload{
 		Text:    DecodeResponse(&resp),
-		Headers: resp.Response.Headers,
-		Status:  resp.Response.Status,
-		Url:     resp.Response.Url,
+		Headers: resp.Headers,
+		Status:  resp.Status,
+		Url:     resp.FinalUrl,
 	}
 
-	for _, cookie := range cookiesJar.Cookies(requestUrl) {
+	for _, cookie := range resp.Cookies {
 		handleResponse.Payload.Cookies = append(handleResponse.Payload.Cookies, &cycletls.Cookie{
 			Name:     cookie.Name,
 			Value:    cookie.Value,
@@ -112,13 +103,6 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 }
 
 func DecodeResponse(response *cycletls.Response) string {
-	switch response.Response.Headers["Content-Encoding"] {
-	case "gzip":
-		reader, _ := gzip.NewReader(strings.NewReader(response.Response.Body))
-		defer reader.Close()
-		readerResponse, _ := ioutil.ReadAll(reader)
-		return string(readerResponse)
-	default:
-		return response.Response.Body
-	}
+	// Сейчас декомпрессия тела ответа происходит при обработке в либе cycletls
+	return response.Body
 }

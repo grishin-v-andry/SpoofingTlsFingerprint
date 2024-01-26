@@ -1,6 +1,6 @@
 package Request
 
-import "github.com/Skyuzii/CycleTLS/cycletls"
+import "github.com/Danny-Dasilva/CycleTLS/cycletls"
 
 type HandleRequest struct {
 	Cookies            []cycletls.Cookie `json:"cookies"`

@@ -1,6 +1,6 @@
 package Response
 
-import "github.com/Skyuzii/CycleTLS/cycletls"
+import "github.com/Danny-Dasilva/CycleTLS/cycletls"
 
 type HandleResponse struct {
 	Success bool                   `json:"success"`
