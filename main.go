@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"github.com/Danny-Dasilva/CycleTLS/cycletls"
 	"github.com/gorilla/mux"
-	"log"
+	"github.com/sirupsen/logrus"
+	defaulLog "log"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -20,14 +23,14 @@ func main() {
 
 	err := os.Setenv("tls13", "1")
 	if err != nil {
-		log.Println(err.Error())
+		defaulLog.Println(err.Error())
 	}
 
 	router := mux.NewRouter()
 	router.HandleFunc("/check-status", CheckStatus).Methods("GET")
 	router.HandleFunc("/handle", Handle).Methods("POST")
 	fmt.Println("The proxy server is running")
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	defaulLog.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 func CheckStatus(responseWriter http.ResponseWriter, request *http.Request) {
@@ -68,6 +71,13 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 		DisableRedirect:    handleRequest.DisableRedirect,
 	}, handleRequest.Method)
 
+	if strings.Contains(handleRequest.Url, "/phone") {
+		logRequestPhone := initLogrus("request_phone")
+
+		logRequestPhone.Println(handleRequest.Url)
+		logRequestPhone.Println(resp.Body)
+	}
+
 	var handleResponse Response.HandleResponse
 
 	if err != nil {
@@ -105,4 +115,22 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 func DecodeResponse(response *cycletls.Response) string {
 	// Сейчас декомпрессия тела ответа происходит при обработке в либе cycletls
 	return response.Body
+}
+
+func initLogrus(filenameKey string) *logrus.Logger {
+	log := logrus.New()
+	filename := filenameKey + "_" + time.Now().Format("20060102") + ".log"
+
+	defaulLog.Println(filename)
+
+	log.SetLevel(logrus.DebugLevel)
+
+	file, err := os.OpenFile("logs/"+filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err == nil {
+		log.SetOutput(file)
+	} else {
+		log.Info("Не удалось открыть файл логов, используется стандартный stderr")
+	}
+
+	return log
 }
