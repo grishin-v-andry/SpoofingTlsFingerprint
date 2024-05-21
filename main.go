@@ -72,6 +72,8 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 
 	var handleResponse Response.HandleResponse
 
+	setResponseCode(responseWriter, resp.Status)
+
 	if err != nil {
 		fmt.Println(err)
 		handleResponse.Success = false
@@ -102,6 +104,15 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	json.NewEncoder(responseWriter).Encode(handleResponse)
+}
+
+func setResponseCode(responseWriter http.ResponseWriter, responseCode int) {
+	statusCode := 200
+	if responseCode == 0 || (responseCode >= 400 && responseCode <= 599) {
+		statusCode = 502
+	}
+
+	responseWriter.WriteHeader(statusCode)
 }
 
 func DecodeResponse(response *cycletls.Response) string {
