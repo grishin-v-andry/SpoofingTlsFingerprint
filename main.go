@@ -11,7 +11,6 @@ import (
 	defaulLog "log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -70,13 +69,6 @@ func Handle(responseWriter http.ResponseWriter, request *http.Request) {
 		UserAgent:          handleRequest.UserAgent,
 		DisableRedirect:    handleRequest.DisableRedirect,
 	}, handleRequest.Method)
-
-	if strings.Contains(handleRequest.Url, "/phone") {
-		logRequestPhone := initLogrus("request_phone")
-
-		logRequestPhone.Println(handleRequest.Url)
-		logRequestPhone.Println(resp.Body)
-	}
 
 	var handleResponse Response.HandleResponse
 
